@@ -10,5 +10,6 @@ edition = "2018"
 clap = "2.33.0"
 env_logger = "0.7.1"
 log = "0.4"
+zip = "0.5.4"
 
 [dev-dependencies]
