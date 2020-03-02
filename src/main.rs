@@ -1,12 +1,17 @@
 #[macro_use]
 extern crate log;
 
-use clap::{App, Arg, crate_version, ArgMatches, Values};
-use crate::classpath::Classpath;
-use std::io::{Read};
-
+mod attribute_info;
 mod classpath;
+mod class_file;
+mod constant_pool;
 mod entry;
+mod read_bytes_ext;
+
+use clap::{App, Arg, crate_version, ArgMatches, Values};
+use std::borrow::Borrow;
+use crate::classpath::Classpath;
+use crate::class_file::ClassFile;
 
 fn main() {
     env_logger::init();
@@ -48,16 +53,33 @@ fn start_vm(matches: ArgMatches) {
     let class_to_load = class.replace(".", "/");
     trace!("class to load: {}", class_to_load);
 
-    let class_data = cp.read_class(class_to_load);
-    match class_data {
-        Ok(mut data) => {
-            let mut bytes = Vec::new();
-            match data.read_to_end(&mut bytes) {
-                Ok(_) => info!("class data: {:?}", bytes),
-                _ => {}
-            }
+    let class_file = load_class(class_to_load, cp);
+    print_class_info(&class_file);
+}
 
+fn load_class(class_name: String, cp: Box<Classpath>) -> Box<ClassFile> {
+    return match cp.read_class(class_name.borrow()) {
+        Ok(mut reader) => ClassFile::parse(&mut reader),
+        Err(err) => {
+            warn!("Could not find or load main class {}, err: {}", class_name, err);
+            panic!()
         },
-        Err(err) => warn!("Could not find or load main class {}, err: {}", class, err),
+    };
+}
+
+fn print_class_info(class_file: &ClassFile) {
+    info!("version: {}.{}", class_file.major_version(), class_file.minor_version());
+    info!("constant count: {}", class_file.constant_pool().len());
+    info!("access flags: {:#018b}", class_file.access_flags());
+    info!("this class: {}", class_file.class_name());
+    info!("super class: {}", class_file.supper_class_name());
+    info!("interfaces: {:?}", class_file.interface_names());
+    info!("fields count: {}", class_file.fields().len());
+    for field in class_file.fields() {
+        info!("  {} -> {}", field.name(), field.descriptor());
+    }
+    info!("methods count: {}", class_file.methods().len());
+    for field in class_file.methods() {
+        info!("  {} -> {}", field.name(), field.descriptor());
     }
 }

@@ -51,7 +51,8 @@ impl Classpath {
         panic!("Can not find jre folder!");
     }
 
-    pub fn read_class(self, mut class_name: String) -> Result<BufReader<Box<dyn Read>>, String> {
+    pub fn read_class(self, class_name: &String) -> Result<BufReader<Box<dyn Read>>, String> {
+        let mut class_name = class_name.clone();
         class_name.push_str(".class");
         let class_name = class_name.as_str();
         //let class_name = format!("{}.class", class_name).as_str();
