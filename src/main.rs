@@ -6,6 +6,7 @@ mod classpath;
 mod class_file;
 mod constant_pool;
 mod entry;
+mod jvm_stack;
 mod read_bytes_ext;
 
 use clap::{App, Arg, crate_version, ArgMatches, Values};
