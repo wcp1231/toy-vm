@@ -6,8 +6,11 @@ mod classpath;
 mod class_file;
 mod constant_pool;
 mod entry;
+mod instructions;
+mod interpreter;
 mod jvm_stack;
 mod read_bytes_ext;
+mod thread;
 
 use clap::{App, Arg, crate_version, ArgMatches, Values};
 use std::borrow::Borrow;
@@ -55,7 +58,10 @@ fn start_vm(matches: ArgMatches) {
     trace!("class to load: {}", class_to_load);
 
     let class_file = load_class(class_to_load, cp);
-    print_class_info(&class_file);
+    let (stack, locals, code) = get_main_method(class_file);
+    trace!("Interpret {} {} {:?}", stack, locals, code);
+    interpreter::interpret(stack, locals, code);
+    //print_class_info(&class_file);
 }
 
 fn load_class(class_name: String, cp: Box<Classpath>) -> Box<ClassFile> {
@@ -66,6 +72,17 @@ fn load_class(class_name: String, cp: Box<Classpath>) -> Box<ClassFile> {
             panic!()
         },
     };
+}
+
+fn get_main_method(class_file: Box<ClassFile>) -> (u16, u16, Vec<u8>){
+    for field in class_file.methods() {
+        if field.name().eq_ignore_ascii_case("main")
+            && field.descriptor().eq_ignore_ascii_case("([Ljava/lang/String;)V") {
+            trace!("Found main method: {:?}", field);
+            return field.code_attribute();
+        }
+    }
+    return (0, 0, Vec::new());
 }
 
 fn print_class_info(class_file: &ClassFile) {

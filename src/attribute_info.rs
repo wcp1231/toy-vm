@@ -12,7 +12,6 @@ pub enum AttributeInfo {
         length: u32,
         max_stack: u16,
         max_locals: u16,
-        code_length: u32,
         code: Vec<u8>,
         exception_table: Vec<ExceptionTable>,
         attributes: Vec<AttributeInfo>,
@@ -62,7 +61,7 @@ impl AttributeInfo {
         let name: String = cp.get_utf8(name_index as usize).into();
         trace!("Read attr name index: {}, name: {}, length: {}", name_index, name, length);
         match name.as_str() {
-            "CODE" => {
+            "Code" => {
                 let max_stack = reader.parse_u2();
                 let max_locals = reader.parse_u2();
                 let code_length = reader.parse_u4();
@@ -74,7 +73,6 @@ impl AttributeInfo {
                     length,
                     max_stack,
                     max_locals,
-                    code_length,
                     code,
                     exception_table,
                     attributes,

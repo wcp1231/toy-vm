@@ -1,5 +1,6 @@
 use std::io;
 use std::mem::transmute;
+use std::io::{Seek, SeekFrom};
 
 pub trait ReadBytesExt: io::Read {
     fn parse_u1_with_len(&mut self, length: u32) -> Vec<u8> {
@@ -63,3 +64,13 @@ pub trait ReadBytesExt: io::Read {
 }
 
 impl<R: io::Read + ?Sized> ReadBytesExt for R {}
+
+pub trait SeekExt: Seek {
+    fn seek_padding(&mut self) {
+        let curr = self.seek(SeekFrom::Current(0)).unwrap();
+        let offset = curr % 4;
+        self.seek(SeekFrom::Current(offset as i64));
+    }
+}
+
+impl<R: Seek> SeekExt for R {}

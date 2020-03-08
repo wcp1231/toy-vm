@@ -156,4 +156,17 @@ impl MemberInfo {
     pub fn descriptor(&self) -> String {
         self.cp.get_utf8(self.descriptor_index as usize).into()
     }
+
+    pub fn code_attribute(&self) -> (u16, u16, Vec<u8>) {
+        let attrs = self.attributes.as_slice();
+        for attribute in attrs {
+            match attribute {
+                AttributeInfo::Code { name, length, max_stack, max_locals, code, exception_table, attributes } => {
+                    return (*max_stack, *max_locals, code.to_vec())
+                }
+                _ => {}
+            }
+        }
+        return (0, 0, Vec::new());
+    }
 }
